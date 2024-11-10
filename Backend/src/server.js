@@ -27,12 +27,12 @@ app.use(express.static("public"));
 
 import userRoute from "./routes/user-route.js";
 import postRoute from "./routes/post-route.js";
-// import productRoute from "./routes/product-route.js";
-// import orderRoute from "./routes/order-route.js";
+import commentRoute from "./routes/comment-route.js";
+
 
 app.use("/api/v1", userRoute);
 app.use("/api/v1", postRoute);
-// app.use("/api/v1", orderRoute);
+app.use("/api/v1", commentRoute);
 
 // Set port and listen for requests
 const PORT = process.env.PORT || 8080;

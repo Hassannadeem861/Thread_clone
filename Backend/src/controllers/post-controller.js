@@ -3,6 +3,8 @@ import Comment from "../models/comment-model.js";
 import Post from "../models/post-model.js";
 import { uploadFileOnCloudinary, deleteImg } from "../../cloudinary.js";
 import fs from "fs"; // To remove local temp file
+import mongoose from "mongoose";
+
 
 const addPost = async (req, res) => {
   try {
@@ -64,8 +66,8 @@ const getAllPosts = async (req, res) => {
       .limit(3)
       .populate({ path: "likes", select: "-password" })
       .populate({ path: "admin", select: "-password" })
-    //   .populate("likes")
-    //   .populate("admin")
+      //   .populate("likes")
+      //   .populate("admin")
       .populate({
         path: "comments",
         populate: {
@@ -212,6 +214,79 @@ const likePost = async (req, res) => {
   }
 };
 
+const rePost = async (req, res) => {
+  try {
+    const id = req.params.id;
 
+    if (!id) {
+      return res.status(400).json({ message: "Id is reqired" });
+    }
 
-export { addPost, getAllPosts, deletePost, likePost };
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const newId = new mongoose.Schema.Types.ObjectId(id);
+    // console.log("newId :", newId);
+
+    if (req.user.reposts.includes(newId)) {
+      return res.status(400).json({
+        message: `This post is already reposted`,
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $push: { reposts: post._id } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: `Reposted successfully`,
+      post,
+      user,
+    });
+  } catch (error) {
+    console.log("REPOST ERROR: ", error.message);
+    return res.status(400).json({
+      message: "REPOST ERROR",
+      err: error.message,
+    });
+  }
+};
+
+const getSinglePost = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    if (!id) {
+      return res.status(400).json({ message: "Id is reqired" });
+    }
+
+    const post = await Post.findById(id)
+
+      .populate({ path: "admin", select: "-password -refreshToken" })
+      .populate({ path: "likes", select: "-password" })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "admin",
+        },
+      });
+
+    return res.status(200).json({
+      message: `Single post fetched successfully`,
+      post
+    });
+  } catch (error) {
+    console.log("SINGLE POST ERROR: ", error.message);
+    return res.status(400).json({
+      message: "SINGLE POST ERROR",
+      err: error.message,
+    });
+  }
+};
+
+export { addPost, getAllPosts, deletePost, likePost, rePost, getSinglePost };

@@ -29,10 +29,10 @@ const verifyToken = async (req, res, next) => {
     const user = await User.findById(decoded._id)
       .select("-password -refreshToken")
       .populate("followers")
-      // .populate("threads")
-      // .populate("reposts")
-      // .populate("replies");
-    console.log("middleware user: ", user);
+      .populate("reposts")
+      .populate("threads")
+      .populate("replies");
+    // console.log("middleware user: ", user);
 
     if (!user) {
       res.status(401).json({ message: "User not found" });
